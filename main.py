@@ -115,4 +115,23 @@ class Encryption:
         # Pass back key and pairs
         return [f, user_encrypt, password_encrypt, dual_user_encrypt, dual_password_encrypt]
 
+class Authentication:
 
+    def __init__(self):
+        pass
+
+class Navigate:
+    # Basic Web fuctions with handleing xpath, ID, linktext
+    def __init__(self,driver,elem):
+
+        self.driver = driver
+        self.elem = elem
+        #click & wait time
+        #click & wait for element
+
+
+# make driver as a normal function then pass into navigate
+def pagedriver():
+    PATH_DRIVER = os.path.join(os.getcwd(), r'include\browser\driver\firefoxdriver.exe') # Currently using OS firefox.
+    driver = webdriver.Firefox(executable_path=PATH_DRIVER)  # , firefox_binary=firefox_binary)
+    return driver
