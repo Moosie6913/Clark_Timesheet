@@ -277,6 +277,7 @@ def launch(platform):
         Authentication(driver,f,user_encrypt,password_encrypt,dual_user_encrypt,dual_password_encrypt).microsoftlogin(targetURL)
         time.sleep(5)
         if platform == "WorleyParsons":
+            pass
             #worley_stages(driver)
         #Element not loading. Try elsewhere
     except:
