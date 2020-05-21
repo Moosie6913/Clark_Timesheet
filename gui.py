@@ -6,7 +6,7 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-
+import main,sys
 from PyQt5 import QtCore, QtGui, QtWidgets
 
 
@@ -14,6 +14,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(800, 600)
+        MainWindow.setFixedSize(800,600)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
         self.centralwidget.setObjectName("centralwidget")
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
@@ -762,6 +763,7 @@ class Ui_MainWindow(object):
         self.gridLayout_2.addWidget(self.label, 1, 0, 1, 1)
         self.BTN_Home_RUN = QtWidgets.QPushButton(self.TAB_Home)
         self.BTN_Home_RUN.setGeometry(QtCore.QRect(590, 460, 171, 71))
+        self.BTN_Home_RUN.clicked.connect(self.FTN_Start)
         font = QtGui.QFont()
         font.setPointSize(18)
         self.BTN_Home_RUN.setFont(font)
@@ -834,6 +836,7 @@ class Ui_MainWindow(object):
         self.BTN_User_Save = QtWidgets.QPushButton(self.TAB_User)
         self.BTN_User_Save.setGeometry(QtCore.QRect(700, 520, 93, 28))
         self.BTN_User_Save.setObjectName("BTN_User_Save")
+        #self.BTN_User_Save.clicked.connect()
         self.LB_User_BuildBy = QtWidgets.QLabel(self.TAB_User)
         self.LB_User_BuildBy.setGeometry(QtCore.QRect(0, 530, 331, 16))
         self.LB_User_BuildBy.setObjectName("LB_User_BuildBy")
@@ -877,6 +880,7 @@ class Ui_MainWindow(object):
         self.LE_Credentials_Pass2.setInputMask("")
         self.LE_Credentials_Pass2.setMaxLength(100)
         self.LE_Credentials_Pass2.setObjectName("LE_Credentials_Pass2")
+        self.LE_Credentials_Pass2.setDisabled(True)
         self.horizontalLayout_3.addWidget(self.LE_Credentials_Pass2)
         self.gridLayout.addLayout(self.horizontalLayout_3, 2, 1, 1, 1)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
@@ -901,12 +905,14 @@ class Ui_MainWindow(object):
         self.LE_Credentials_User2.setInputMask("")
         self.LE_Credentials_User2.setMaxLength(100)
         self.LE_Credentials_User2.setObjectName("LE_Credentials_User2")
+        self.LE_Credentials_User2.setDisabled(True)
         self.horizontalLayout_4.addWidget(self.LE_Credentials_User2)
         self.gridLayout.addLayout(self.horizontalLayout_4, 2, 0, 1, 1)
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_5.setObjectName("horizontalLayout_5")
         self.CkB_Credentials_Dual_log = QtWidgets.QCheckBox(self.gridLayoutWidget)
         self.CkB_Credentials_Dual_log.setObjectName("CkB_Credentials_Dual_log")
+        self.CkB_Credentials_Dual_log.stateChanged.connect(self.Ftn_Credentials_Dual_state)
         self.horizontalLayout_5.addWidget(self.CkB_Credentials_Dual_log)
         self.gridLayout.addLayout(self.horizontalLayout_5, 1, 0, 1, 1)
         self.formLayoutWidget = QtWidgets.QWidget(self.TAB_Credentials)
@@ -950,10 +956,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout_6.setObjectName("horizontalLayout_6")
         self.BTN_Credentials_Clear = QtWidgets.QPushButton(self.horizontalLayoutWidget_8)
         self.BTN_Credentials_Clear.setObjectName("BTN_Credentials_Clear")
+        self.BTN_Credentials_Clear.clicked.connect(self.FTN_Credential_Delete)
         self.horizontalLayout_6.addWidget(self.BTN_Credentials_Clear)
         self.BTN_Credentials_Save = QtWidgets.QPushButton(self.horizontalLayoutWidget_8)
         self.BTN_Credentials_Save.setObjectName("BTN_Credentials_Save")
+        self.BTN_Credentials_Save.clicked.connect(self.FTN_BTN_Credentials_Save)
         self.horizontalLayout_6.addWidget(self.BTN_Credentials_Save)
+
         self.LB_Credentials_BuildBy = QtWidgets.QLabel(self.TAB_Credentials)
         self.LB_Credentials_BuildBy.setGeometry(QtCore.QRect(0, 530, 331, 16))
         self.LB_Credentials_BuildBy.setObjectName("LB_Credentials_BuildBy")
@@ -1114,12 +1123,77 @@ class Ui_MainWindow(object):
         self.LB_Feed_9.setText(_translate("MainWindow", "XXXX"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.TAB_Readme), _translate("MainWindow", "README"))
 
+        self.startupload()
 
-if __name__ == "__main__":
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    MainWindow = QtWidgets.QMainWindow()
-    ui = Ui_MainWindow()
-    ui.setupUi(MainWindow)
-    MainWindow.show()
-    sys.exit(app.exec_())
+    #def tab_home_functions(self):
+        #
+
+    #tab_user_preferences_functions(self):
+    def startupload(self):
+        user1, pass1, user2, pass2 = main.startupload()
+        if user1 is None:
+            pass
+        else:
+            self.FTN_Credential_refresh(user1, pass1, user2, pass2)
+
+
+
+    def Ftn_Credentials_Dual_state(self):
+        if self.CkB_Credentials_Dual_log.isChecked():
+            self.LE_Credentials_User2.setDisabled(False)
+            self.LE_Credentials_Pass2.setDisabled(False)
+        else:
+            self.LE_Credentials_User2.setText("")
+            self.LE_Credentials_Pass2.setText("")
+            self.LE_Credentials_User2.setDisabled(True)
+            self.LE_Credentials_Pass2.setDisabled(True)
+        pass
+
+    def FTN_BTN_Credentials_Save(self):
+        #todo Add Confirmation pop up,
+        if self.LE_Credentials_User1.text() != "" or self.LE_Credentials_Pass1.text() != "":
+            success = main.user_credentials_overwrite(self.LE_Credentials_User1.text(),self.LE_Credentials_Pass1.text(),self.LE_Credentials_User2.text(),self.LE_Credentials_Pass2.text())
+        else:
+            success = False
+
+        if success:
+            #pass1 = len(self.LE_Credentials_Pass1.text()) * '*'
+            self.FTN_Credential_refresh(self.LE_Credentials_User1.text(),len(self.LE_Credentials_Pass1.text()) * '*',self.LE_Credentials_User2.text(),len(self.LE_Credentials_Pass2.text()) * '*')
+        else:
+            print("Missing User or Password")
+            pass
+
+    def FTN_Credential_refresh(self,user1,pass1,user2,pass2):
+        if user2 == str(''):
+            user2 = 'No saved data'
+        if pass2 == str(''):
+            pass2 = 'No saved data'
+        self.LE_Credentials_User1.setText("")
+        self.LE_Credentials_Pass1.setText("")
+        self.LE_Credentials_User2.setText("")
+        self.LE_Credentials_Pass2.setText("")
+        self.LB_Credentials_User1_Saved.setText(user1)
+        self.LB_Credentials_Pass1_Saved.setText(pass1)
+        self.LB_Credentials_User2_Saved.setText(user2)
+        self.LB_Credentials_Pass2_Saved.setText(pass2)
+
+    def FTN_Credential_Delete(self):
+        main.Encryption().clear()
+        user1, pass1, user2, pass2 = 'No saved data','No saved data','No saved data','No saved data'
+        self.FTN_Credential_refresh(user1, pass1, user2, pass2)
+
+    def FTN_Start(self):
+
+        main.launch(self.CB_User_heritage.currentText())
+        self.close_application()
+
+    def close_application(self):
+        sys.exit()
+
+    #def tab_user_credentials_functions(self):
+        #pass
+
+    #def tab_feedback_functions(self):
+        #pass
+
+

@@ -1,15 +1,15 @@
-import logging, os, time, sys
-import gui
+import logging, os, time, sys, gui
 from cryptography.fernet import Fernet
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from PyQt5 import QtCore, QtGui, QtWidgets
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 logging.disable(logging.DEBUG)
 
 ######################### CUSTOM DATA ###############################################
-targetURL = 'https://ebs.worley.com/OA_HTML/OA.jsp?OAFunc=OAHOMEPAGE'
+
 
 
 class Encryption:
@@ -53,7 +53,7 @@ class Encryption:
             logging.error('No stored user data found... Continuing...')
             pass
 
-    def save(self, dual=False):
+    def save(self, user1, pass1, user2, pass2):
         # Generates new encryption key and pairs
         # Returns 'Encrypted-(Key,Email,Pass,User2,Pass2)
 
@@ -66,12 +66,14 @@ class Encryption:
         file.close()
 
         # Generate Pairs
-        user_encrypt = f.encrypt(input('Enter Worley Email: \n').encode())
-        password_encrypt = f.encrypt(input('Enter Worley Password: \n').encode())
-        if dual:  # If two log in screens exist
-            print('Enter log on details for secondary authentication screen i.e for timesheet log on')
-            dual_user_encrypt = f.encrypt(input('Enter New Username For Timesheet: \n').encode())
-            dual_password_encrypt = f.encrypt(input('Enter New Password For Timesheet: \n').encode())
+        user_encrypt = f.encrypt((user1).encode())
+        password_encrypt = f.encrypt(pass1.encode())
+        dual = False
+        if user2 is not None and pass2 is not None: # Dual
+            dual = True
+            #print('Enter log on details for secondary authentication screen i.e for timesheet log on')
+            dual_user_encrypt = f.encrypt(user2.encode())
+            dual_password_encrypt = f.encrypt(pass2.encode())
         else:  # else return nulls
             dual_user_encrypt = None
             dual_password_encrypt = None
@@ -104,10 +106,10 @@ class Encryption:
         logging.info('Loading existing credentials...')
         user_encrypt = Encryption().read('pair1.pair')
         password_encrypt = Encryption().read('pair2.pair')
-        if dual:
+        try:
             dual_user_encrypt = Encryption().read('pair3.pair')
             dual_password_encrypt = Encryption().read('pair4.pair')
-        else:  # else return nulls
+        except:  # else return nulls
             dual_user_encrypt = None
             dual_password_encrypt = None
         logging.info('Credentials loaded successfully')
@@ -237,29 +239,80 @@ def getdriver():
     return driver
 
 
-#MAIN
-# Ask if new or current credentials
-print('Select from the following options:\n[1] - Input New Login Details\n[2] - Use Existing')
-x = input('>>> ')
-
-dual = False
-
-if x == '1':  # if new credentials are reburied
-
-    logging.info('Option 1 Selected: Override existing credentials? ')
-    x = input('Override existing credentials? [Y/N]\n')
-    if x.upper() == 'Y':  # If override confirm
-        print("Please enter your network log in details... e.g \'connor.clark@worleyparsons.com\' ")
+def user_credentials_overwrite(user1=None, pass1=None, user2=None, pass2=None):
+    if user1 is not None and pass1 is not None:
+        #TODO add regex
         Encryption().clear()
-        f, user_encrypt, password_encrypt, dual_user_encrypt, dual_password_encrypt = Encryption().save(dual)
-        # TODO: Add in confirmation of details
-    else: # abort program
-        input('Press any key to close...')
-        sys.exit()
+        f, user_encrypt, password_encrypt, dual_user_encrypt, dual_password_encrypt = Encryption().save(user1, pass1, user2, pass2)
+        return True
+    else:
+        logging.debug("User or password was blank")
+        return False
 
-else: # if using previous credentials
-    f, user_encrypt, password_encrypt, dual_user_encrypt, dual_password_encrypt = Encryption().load(dual)
+def startupload():
+    try:
+        f, user_encrypt, password_encrypt, dual_user_encrypt, dual_password_encrypt = Encryption().load()
+        user1 = f.decrypt(user_encrypt).decode()
+        pass1 = len(f.decrypt(password_encrypt).decode()) * "*"
+        if dual_user_encrypt is not None and dual_password_encrypt is not None:
+            user2 = f.decrypt(dual_user_encrypt).decode()
+            pass2 = len(f.decrypt(dual_password_encrypt).decode()) * "*"
+        else:
+            user2 = str("")
+            pass2 = str("")
+        return user1, pass1, user2, pass2
+    except:
+        user1, pass1, user2, pass2 = None, None, None, None
+        return user1, pass1, user2, pass2
 
-driver = getdriver()
-Authentication(driver,f,user_encrypt,password_encrypt,dual_user_encrypt,dual_password_encrypt).microsoftlogin(targetURL)
+def launch(platform):
+    if platform == "WorleyParsons":
+        targetURL = 'https://ebs.worley.com/OA_HTML/OA.jsp?OAFunc=OAHOMEPAGE'
+    else: #Jacobs ECR
+        targetURL = 'https://sharepoint.worley.com' #TODO set up ECR pathway
+
+    try:
+        f, user_encrypt, password_encrypt, dual_user_encrypt, dual_password_encrypt = Encryption().load()
+        driver = getdriver()
+        Authentication(driver,f,user_encrypt,password_encrypt,dual_user_encrypt,dual_password_encrypt).microsoftlogin(targetURL)
+    except:
+        logging.error("No saved data")
+        pass #TODO Add popup for no saved data
+
+# #MAIN
+# # Ask if new or current credentials
+# print('Select from the following options:\n[1] - Input New Login Details\n[2] - Use Existing')
+# x = input('>>> ')
+#
+# dual = False
+#
+# if x == '1':  # if new credentials are reburied
+#
+#     logging.info('Option 1 Selected: Override existing credentials? ')
+#     x = input('Override existing credentials? [Y/N]\n')
+#     if x.upper() == 'Y':  # If override confirm
+#         print("Please enter your network log in details... e.g \'connor.clark@worleyparsons.com\' ")
+#         Encryption().clear()
+#         f, user_encrypt, password_encrypt, dual_user_encrypt, dual_password_encrypt = Encryption().save(dual)
+#         # TODO: Add in confirmation of details
+#     else: # abort program
+#         input('Press any key to close...')
+#         sys.exit()
+#
+# else: # if using previous credentials
+#     f, user_encrypt, password_encrypt, dual_user_encrypt, dual_password_encrypt = Encryption().load(dual)
+#
+
+if __name__ == "__main__":
+    import sys
+    app = QtWidgets.QApplication(sys.argv)
+    MainWindow = QtWidgets.QMainWindow()
+    ui = gui.Ui_MainWindow()
+    ui.setupUi(MainWindow)
+    MainWindow.show()
+    #driver = getdriver()
+    #Authentication(driver, f, user_encrypt, password_encrypt, dual_user_encrypt, dual_password_encrypt).microsoftlogin(targetURL)
+    sys.exit(app.exec_())
+
+
 
