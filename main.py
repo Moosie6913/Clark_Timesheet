@@ -275,10 +275,25 @@ def launch(platform):
         f, user_encrypt, password_encrypt, dual_user_encrypt, dual_password_encrypt = Encryption().load()
         driver = getdriver()
         Authentication(driver,f,user_encrypt,password_encrypt,dual_user_encrypt,dual_password_encrypt).microsoftlogin(targetURL)
+        time.sleep(5)
+        if platform == "WorleyParsons":
+            #worley_stages(driver)
+        #Element not loading. Try elsewhere
     except:
         logging.error("No saved data")
         pass #TODO Add popup for no saved data
 
+
+def worley_stages(driver):
+    print(1)
+    Navigate(driver,"WP AU Time Entry", "LINKTEXT").click(1)
+    print(2)
+    Navigate(driver, "Time Entry", "LINKTEXT").click(1)
+    print(3)
+    Navigate(driver, "Create Timecard", "LINKTEXT").click(1)
+
+def ecr_stages():
+    pass
 # #MAIN
 # # Ask if new or current credentials
 # print('Select from the following options:\n[1] - Input New Login Details\n[2] - Use Existing')
